@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "FashionPost": {
+      "title": "FashionPost",
+      "description": "An archived high-fashion garment entry with media elements",
+      "type": "object",
+      "properties": {
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video"]
+        },
+        "mediaUrl": {
+          "type": "string",
+          "description": "The compressed Base64 image data-url or raw video URL string"
+        },
+        "location": {
+          "type": "string",
+          "description": "Studio or capture location"
+        },
+        "createdAt": {
+          "type": "object",
+          "description": "Timestamp when the document was created"
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the active post archiver"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Display name of the active post archiver"
+        },
+        "title": {
+          "type": "string",
+          "description": "Garment Name"
+        },
+        "designer": {
+          "type": "string",
+          "description": "Designer / House"
+        },
+        "season": {
+          "type": "string",
+          "description": "Collection / Season"
+        },
+        "materials": {
+          "type": "string",
+          "description": "Materials Used"
+        },
+        "desc": {
+          "type": "string",
+          "description": "Editorial Narrative"
+        }
+      },
+      "required": [
+        "mediaType",
+        "mediaUrl",
+        "location",
+        "createdAt",
+        "userEmail",
+        "userName",
+        "title",
+        "designer"
+      ]
+    }
+  },
+  "firestore": {
+    "fashion_posts/{postId}": {
+      "schema": "FashionPost",
+      "description": "Vault of all fashion look contribution uploads"
+    }
+  }
+}

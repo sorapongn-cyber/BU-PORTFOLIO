@@ -1,0 +1,6 @@
+{
+  "name": "BU FASHION PORTFOLIO",
+  "description": "An ultra-minimalist fashion archive and portfolio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

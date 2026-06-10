@@ -1,0 +1,1970 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BU FASHION PORTFOLIO — Digital Archive</title>
+    
+    <!-- Google Fonts for Playfair Display & Inter (Artistic Flair Pair) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Play CDN Edition) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase Compat Web SDK (v9+) CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Tailwind Config with Artistic Fonts -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['"Playfair Display"', 'Georgia', 'serif'],
+              sans: ['"Inter"', 'sans-serif'],
+            },
+            animation: {
+              'fade-up': 'fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'fade-in': 'fadeIn 0.4s ease-out forwards',
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      /* Artistic Flair: Hide scrollbars completely */
+      ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body class="bg-zinc-100 text-black font-sans min-h-screen flex justify-center items-stretch antialiased selection:bg-black selection:text-white">
+    
+    <!-- Main responsive layout container matching Notebook, Tablet and Mobile viewports -->
+    <div id="app-container" class="w-full max-w-md md:max-w-3xl lg:max-w-5xl min-h-screen bg-white shadow-2xl relative flex flex-col overflow-hidden border-x border-zinc-100">
+      
+      <!-- Artistic Sticky Header: responsive paddings. -->
+      <header class="sticky top-0 z-25 bg-white border-b border-zinc-100 px-6 md:px-10 py-6 md:py-8 flex justify-between items-center transition-all">
+        <div class="min-w-0 flex-1 mr-4">
+          <h1 class="text-[9px] md:text-[10px] font-semibold tracking-[0.3em] uppercase text-zinc-400 mb-0.5">Digital Archive</h1>
+          <h2 class="text-lg md:text-2xl font-light tracking-[0.1em] md:tracking-[0.15em] uppercase font-serif whitespace-nowrap truncate">BU FASHION PORTFOLIO</h2>
+        </div>
+        
+        <button id="auth-btn" class="flex-shrink-0 text-[10px] md:text-xs tracking-widest uppercase font-bold border-b border-black pb-1 hover:text-zinc-500 hover:border-zinc-500 transition-colors uppercase flex items-center gap-1.5 cursor-pointer">
+          <span>SIGN IN</span>
+          <i data-lucide="arrow-right" class="w-3 h-3 text-zinc-400"></i>
+        </button>
+      </header>
+
+      <!-- Main Feed Area -->
+      <main class="flex-1 overflow-y-auto min-h-0 flex flex-col bg-white">
+        
+        <!-- Grid styling matching gap-[2px] bg-zinc-100 -->
+        <div id="posts-container" class="grid grid-cols-3 gap-[2px] bg-zinc-100 flex-1 content-start transition-opacity duration-300">
+          <!-- Populated from Javascript -->
+        </div>        <!-- Ultra-Premium Minimalist Pagination Navigation -->
+        <div id="pagination-controls" class="hidden justify-between items-center px-6 md:px-10 py-5 md:py-7 border-t border-zinc-100 bg-white">
+          <button id="prev-page-btn" onclick="goToPage(currentPage - 1)" class="text-[9px] md:text-xs uppercase tracking-[0.2em] font-bold text-zinc-400 hover:text-black transition-colors cursor-pointer flex items-center gap-1 bg-transparent border-0 outline-none">
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> PREV
+          </button>
+          <span id="page-indicator" class="text-[9px] md:text-[10px] uppercase tracking-[0.25em] text-zinc-400 font-mono font-medium">01 / 01</span>
+          <button id="next-page-btn" onclick="goToPage(currentPage + 1)" class="text-[9px] md:text-xs uppercase tracking-[0.2em] font-bold text-zinc-400 hover:text-black transition-colors cursor-pointer flex items-center gap-1 bg-transparent border-0 outline-none">
+            NEXT <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Artistic Empty State layout -->
+        <div id="empty-state" class="hidden flex-1 flex flex-col items-center justify-center px-12 text-center bg-white py-32 select-none animate-fade-in">
+          <p class="font-serif italic text-zinc-400 text-lg">The portfolio is currently empty.</p>
+          <div class="w-8 h-[1px] bg-zinc-200 mt-4"></div>
+          <p class="font-sans text-[9px] uppercase tracking-[0.25em] text-zinc-400 mt-5 max-w-[210px] mx-auto leading-relaxed">
+            Portfolio closed. Secure authentication required to archive works.
+          </p>
+        </div>
+
+        <!-- Artistic Footer Theme Panel -->
+        <footer class="p-6 md:px-10 md:py-8 border-t border-zinc-100 bg-white">
+          <div class="flex justify-between items-center">
+            <div class="text-[9px] uppercase tracking-widest text-zinc-400 font-medium">
+              &copy; 2026 BU FASHION
+            </div>
+            <div class="flex gap-4">
+              <div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+              <div class="w-2 h-2 rounded-full bg-zinc-200"></div>
+            </div>
+          </div>
+        </footer>
+
+        <!-- Auxiliary Simulation State Controller Compartment -->
+        <div class="border-t border-zinc-100 bg-zinc-50 p-6 md:px-10 md:py-8 flex flex-col gap-3 selection:bg-zinc-200">
+          <div class="flex items-center justify-between">
+            <span class="text-[8px] uppercase tracking-[0.2em] font-bold text-zinc-400">Sandbox Preview Deck</span>
+            <span id="state-badge" class="text-[8px] lowercase font-mono px-1.5 py-0.5 bg-zinc-100 rounded text-zinc-500">active</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="overrideClear()" class="w-full text-center py-2 bg-white hover:bg-zinc-100 border border-zinc-200 text-[10px] font-sans font-medium uppercase tracking-wider text-zinc-600 transition-colors cursor-pointer rounded">
+              Empty State
+            </button>
+            <button onclick="overrideRestore()" class="w-full text-center py-2 bg-black hover:bg-zinc-900 text-white text-[10px] font-sans font-medium uppercase tracking-wider transition-colors cursor-pointer rounded">
+              Restore (90 looks / 10 Pages)
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- FAB configured exactly to look artistic but stay fully functional -->
+      <button id="add-fab" class="absolute bottom-8 right-6 w-14 h-14 bg-black text-white rounded-full flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer translate-y-12 opacity-0 pointer-events-none z-30">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+      </button>
+
+      <!-- SIMULATED SIGN-IN DRAWER OVERLAY -->
+      <div id="auth-drawer" class="absolute inset-0 bg-neutral-900/40 backdrop-blur-[1px] opacity-0 pointer-events-none transition-all duration-500 z-40 flex items-end">
+        <div class="w-full bg-white rounded-t-2xl p-8 py-10 shadow-2xl transform translate-y-full transition-transform duration-500 max-h-[90%] overflow-y-auto">
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex flex-col">
+              <span class="text-[8px] uppercase tracking-[0.25em] text-zinc-400 font-bold">Credentials Required</span>
+              <h3 class="font-serif text-2xl font-light mt-1 text-black">Access the Portfolio</h3>
+            </div>
+            <button onclick="toggleAuthDrawer(false)" class="text-zinc-300 hover:text-black transition-colors p-1">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <form id="login-form" onsubmit="handleDemoLogin(event)" class="space-y-6">
+            <div class="space-y-1.5">
+              <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Archivist Email</label>
+              <input type="email" id="login-email" value="sorapong.n@bu.ac.th" required class="w-full border-b border-zinc-200 focus:border-black py-2 text-sm font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="name@bu.ac.th" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Access Code</label>
+              <input type="password" id="login-pwd" required value="••••••••" class="w-full border-b border-zinc-200 focus:border-black py-2 text-sm font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="Enter secure key" />
+            </div>
+
+            <div class="pt-2">
+              <button type="submit" class="w-full bg-black text-white hover:bg-zinc-900 py-3 text-center text-xs font-sans font-medium uppercase tracking-[0.18em] transition-all duration-300 cursor-pointer">
+                Unlock Workspace
+              </button>
+            </div>
+            <p class="text-[10px] text-center text-zinc-400 italic">
+              Demonstration Mode: Any credentials will authenticate instantly.
+            </p>
+          </form>
+        </div>
+      </div>
+
+      <!-- MINIMALIST POST CREATION OVERLAY MODAL -->
+      <div id="add-drawer" class="absolute inset-0 bg-neutral-900/60 backdrop-blur-[2px] opacity-0 pointer-events-none transition-all duration-500 z-40 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg md:max-w-2xl bg-white rounded-xl p-6 md:p-8 shadow-2xl relative transform scale-95 opacity-0 transition-all duration-500 max-h-[92%] overflow-y-auto z-50">
+          
+          <!-- Close Button -->
+          <button onclick="toggleAddDrawer(false)" class="absolute top-4 right-4 text-zinc-400 hover:text-black transition-colors p-1.5 rounded-full hover:bg-zinc-100 cursor-pointer z-10">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Modal Header -->
+          <div class="mb-5 flex flex-col">
+            <span class="text-[8px] uppercase tracking-[0.25em] text-zinc-400 font-bold">Portfolio Deposit</span>
+            <h3 class="font-serif text-2xl font-light mt-1 text-black">NEW UPLOAD</h3>
+          </div>
+
+          <form id="portfolio-add-form" onsubmit="handleAddItemSubmit(event)" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+              
+              <!-- Left section: Media type selector & dynamic upload input panel -->
+              <div class="space-y-4">
+                <div class="space-y-1.5">
+                  <label class="text-[8px] uppercase tracking-widest text-zinc-400 font-bold block">Media Channel (ประเภทอัปโหลด)</label>
+                  <div class="grid grid-cols-3 bg-zinc-100 rounded-lg p-1 text-[8px] uppercase font-bold tracking-normal gap-1">
+                    <button type="button" id="chan-upload-image" onclick="switchMediaChannel('UPLOAD_IMAGE')" class="py-2 text-center rounded-md bg-white text-black shadow-sm transition-all focus:outline-none cursor-pointer">UPLOAD IMAGE</button>
+                    <button type="button" id="chan-image-link" onclick="switchMediaChannel('IMAGE_LINK')" class="py-2 text-center text-zinc-400 hover:text-zinc-700 transition-all focus:outline-none cursor-pointer">IMAGE LINK</button>
+                    <button type="button" id="chan-video-link" onclick="switchMediaChannel('VIDEO_LINK')" class="py-2 text-center text-zinc-400 hover:text-zinc-700 transition-all focus:outline-none cursor-pointer">VIDEO LINK</button>
+                  </div>
+                </div>
+
+                <!-- Dynamic media input section -->
+                <div id="media-input-container">
+                  <!-- IF "UPLOAD IMAGE" is selected: Minimalist file input field with accept="image/*" -->
+                  <div id="panel-upload-image" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Upload Image File</label>
+                      <span id="img-optimize-badge" class="text-[8px] font-mono px-1.5 py-0.5 rounded bg-zinc-105 text-zinc-650">No file loaded</span>
+                    </div>
+                    <div id="dropzone" class="border border-dashed border-zinc-200 hover:border-black bg-zinc-50/50 p-6 rounded-lg text-center cursor-pointer transition-colors flex flex-col items-center justify-center min-h-[140px]" onclick="triggerFileInput()">
+                      <input type="file" id="file-uploader" accept="image/*" onchange="processFileLoad(event)" class="hidden" />
+                      <div id="upload-placeholder" class="space-y-1">
+                        <i data-lucide="upload-cloud" class="w-5 h-5 mx-auto text-zinc-300"></i>
+                        <p class="text-[10px] text-zinc-550 font-sans">Click or drag image here</p>
+                        <p class="text-[8px] text-zinc-400 uppercase tracking-widest font-mono">JPG, PNG, GIF accept="image/*"</p>
+                      </div>
+                      <!-- Compressed Image preview -->
+                      <div id="upload-preview-layer" class="hidden w-full h-28 overflow-hidden relative rounded animate-fade-in">
+                        <img id="upload-pimg" src="" class="w-full h-full object-cover" />
+                        <button type="button" onclick="resetFileSelection(event)" class="absolute top-1 right-1 bg-black/60 hover:bg-black text-white p-1 rounded-full cursor-pointer">
+                          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- IF "IMAGE LINK" is selected -->
+                  <div id="panel-image-link" class="hidden space-y-2">
+                    <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Image URL</label>
+                    <input type="text" id="item-image-link-url" class="status-input w-full border-b border-zinc-205 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="Paste Image URL (Google Drive, Pinterest, etc.)" oninput="clearValidationError('media-input')" />
+                    <p class="text-[8px] text-zinc-400 font-mono mt-1.5 leading-normal italic">
+                      * Recommended: Directly source raw static photo layouts in high definition.
+                    </p>
+                  </div>
+
+                  <!-- IF "VIDEO LINK" is selected -->
+                  <div id="panel-video-link" class="hidden space-y-2">
+                    <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Video URL</label>
+                    <input type="text" id="item-video-link-url" class="status-input w-full border-b border-zinc-205 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="Paste Video URL (TikTok, Reels, Shorts)" oninput="clearValidationError('media-input')" />
+                    <p class="text-[8px] text-zinc-400 font-mono mt-1.5 leading-normal italic">
+                      * Recommended: Instant load directly via global streaming hubs like Shorts/TikTok.
+                    </p>
+                  </div>
+
+                  <!-- Inline Error for Media Input -->
+                  <p id="media-input-error" class="text-[10px] text-red-600 mt-1.5 hidden"></p>
+                </div>
+              </div>
+
+              <!-- Right section: metadata fields -->
+              <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Garment Name</label>
+                    <input type="text" id="item-title" required class="w-full border-b border-zinc-200 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="e.g. Asymmetrical Drape" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Designer / House</label>
+                    <input type="text" id="item-designer" required class="w-full border-b border-zinc-200 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="e.g. Yohji Yamamoto" />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Collection / Season</label>
+                    <input type="text" id="item-season" required class="w-full border-b border-zinc-200 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="e.g. 2026 Autumn-Winter" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Materials Used</label>
+                    <input type="text" id="item-materials" class="w-full border-b border-zinc-200 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="e.g. Raw silk, sheer knit" />
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Editorial Narrative</label>
+                  <textarea id="item-desc" required rows="2" class="w-full border-b border-zinc-200 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent resize-none" placeholder="Elaborate on structural geometry, color story, and textile interaction..."></textarea>
+                </div>
+
+                <!-- Location Field -->
+                <div class="space-y-1">
+                  <label class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold block">Location</label>
+                  <input type="text" id="item-location" class="status-input w-full border-b border-zinc-200 focus:border-black py-2 text-xs font-sans focus:outline-none transition-colors rounded-none bg-transparent" placeholder="Location (e.g., Studio 11, BU Diamond)" oninput="clearValidationError('item-location')" />
+                  <p id="item-location-error" class="text-[10px] text-red-600 mt-1.5 hidden"></p>
+                </div>
+
+                <div class="pt-2">
+                  <button type="submit" class="w-full bg-black text-white hover:bg-zinc-900 py-3 text-center text-xs font-sans font-medium uppercase tracking-[0.18em] transition-all duration-300 cursor-pointer rounded">
+                    PUBLISH TO VAULT
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- PORTRAIT EDITORIAL DETAIL MODAL OVERLAY -->
+      <div id="detail-drawer" class="absolute inset-0 bg-zinc-950/75 backdrop-blur-[2px] opacity-0 pointer-events-none transition-all duration-500 z-50 flex flex-col justify-end">
+        <!-- Close overlay trigger -->
+        <div class="absolute inset-0 cursor-pointer" onclick="toggleDetailDrawer(false)"></div>
+        
+        <!-- Drawer content -->
+        <div class="w-full bg-white rounded-t-2xl p-6 md:p-8 lg:p-10 shadow-2xl relative z-10 transform translate-y-full transition-transform duration-500 overflow-y-auto max-h-[90%] md:max-h-[85%] select-text">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-10 items-start">
+            
+            <!-- Detail header image context panel -->
+            <div id="detail-media-box" class="aspect-[3/4] w-full bg-zinc-50 overflow-hidden rounded-lg relative shadow-lg group">
+              <!-- Static Image content -->
+              <img id="detail-img" src="" class="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.02] cursor-zoom-in" onclick="openImageZoom()" />
+              <!-- Direct/Streaming Video Player container -->
+              <div id="detail-video-container" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+                <!-- Video player tag or embed iframe loads here dynamically -->
+              </div>
+              <!-- Zoom trigger indicator button -->
+              <button id="detail-zoom-btn" onclick="openImageZoom()" class="absolute bottom-4 left-4 bg-black/80 hover:bg-black backdrop-blur-md text-white text-[9.5px] uppercase tracking-wider font-medium px-3.5 py-2.5 rounded-lg cursor-pointer transition-all flex items-center gap-1.5 shadow-md hover:scale-105 z-20">
+                <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                <span class="font-mono">EXPAND (ขยายซูม)</span>
+              </button>
+              <button onclick="toggleDetailDrawer(false)" class="absolute top-4 right-4 bg-white/94 backdrop-blur shadow-md hover:bg-white text-zinc-850 p-2 rounded-full cursor-pointer transition-transform duration-300 hover:rotate-90 z-20">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Metadata/Narrative content side -->
+            <div class="space-y-6 px-1 h-full flex flex-col justify-between">
+              <div class="space-y-6">
+                <div class="flex items-start justify-between border-b border-zinc-100 pb-4">
+                  <div class="flex flex-col">
+                    <span id="detail-designer" class="text-[10px] uppercase tracking-[0.25em] font-medium text-zinc-450">Designer Label</span>
+                    <h4 id="detail-title" class="font-serif text-2xl lg:text-3xl font-light text-black italic mt-1">Fashion Silhouette</h4>
+                  </div>
+                  <span id="detail-season" class="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded">2026/AW</span>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="space-y-1">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Editorial Notes</span>
+                    <p id="detail-desc" class="text-xs md:text-sm leading-relaxed text-zinc-650 font-sans">
+                      Detail description will load here dynamically in elegant serif writing.
+                    </p>
+                  </div>
+
+                  <div id="detail-material-row" class="space-y-1 pt-3.5 border-t border-zinc-100">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Materials</span>
+                    <p id="detail-materials" class="text-[10px] md:text-xs text-zinc-500 font-mono">Chiffon raw yarn</p>
+                  </div>
+
+                  <div id="detail-location-row" class="space-y-1 pt-3.5 border-t border-zinc-100">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Location</span>
+                    <p id="detail-location" class="text-[10px] md:text-xs text-zinc-500 font-mono">Studio 11, BU Diamond</p>
+                  </div>
+
+                  <div id="detail-video-row" class="space-y-1 pt-3.5 border-t border-zinc-100 hidden">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-400 block font-bold">Watch Video Link</span>
+                    <a id="detail-video-link" href="#" target="_blank" rel="noopener noreferrer" class="text-[10px] md:text-xs text-rose-500 font-mono underline hover:text-rose-600 flex items-center gap-1">
+                      <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Play Exterior Footage
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="pt-6">
+                <!-- Highlight actions and main buttons better -->
+                <button onclick="toggleDetailDrawer(false)" class="w-full py-3 bg-zinc-900 hover:bg-black text-white text-center text-[10px] font-sans font-medium uppercase tracking-widest transition-colors cursor-pointer rounded">
+                  Exit Gallery
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- FULLSCREEN FASHION DETAIL ZOOM LIGHTBOX MULTI-TOUCH/PAN & SCROLL SYSTEM -->
+      <div id="zoom-lightbox" class="fixed inset-0 bg-zinc-950/98 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300 z-[100] flex flex-col items-center justify-between p-4 select-none">
+        <!-- Close trigger overlay -->
+        <div class="absolute inset-0 cursor-grab active:cursor-grabbing" id="lightbox-bg-drag" onmousedown="startPan(event)" ontouchstart="startPan(event)"></div>
+        
+        <!-- Header status controller bar -->
+        <div class="w-full max-w-7xl mx-auto flex items-center justify-between relative z-10 p-2">
+          <div class="flex flex-col text-left">
+            <span id="zoom-lightbox-label" class="text-[9px] uppercase tracking-[0.25em] font-bold text-zinc-400">High Resolution Editorial Concept</span>
+            <span id="zoom-lightbox-title" class="text-xs font-serif italic text-white/90">Silhouette details view</span>
+          </div>
+          
+          <!-- Direct controls panel -->
+          <div class="flex items-center gap-1.5">
+            <button onclick="changeZoomFactor(1.25)" class="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white p-2.5 rounded-full cursor-pointer transition-colors" title="Zoom In (ขยาย)">
+              <i data-lucide="zoom-in" class="w-4 h-4"></i>
+            </button>
+            <button onclick="changeZoomFactor(0.8)" class="bg-zinc-900 border border-zinc-805 hover:bg-zinc-800 text-white p-2.5 rounded-full cursor-pointer transition-colors" title="Zoom Out (ย่อ)">
+              <i data-lucide="zoom-out" class="w-4 h-4"></i>
+            </button>
+            <button onclick="resetZoomPanning()" class="bg-zinc-900 border border-zinc-805 hover:bg-zinc-800 text-white p-2.5 rounded-full cursor-pointer transition-colors" title="Reset Zoom (ขนาดจริง)">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+            <button onclick="closeZoomLightbox()" class="bg-zinc-900/90 border border-zinc-850 hover:bg-rose-950 hover:text-rose-450 hover:border-rose-950 text-white p-2.5 rounded-full cursor-pointer transition-all ml-4" title="Close Lightbox (ปิด)">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Zoom Image Container wrapper -->
+        <div class="flex-1 w-full flex items-center justify-center relative overflow-hidden select-none" id="lightbox-image-wrapper">
+          <img id="zoom-lightbox-img" src="" class="max-w-[90%] max-h-[80%] md:max-h-[85%] object-contain shadow-2xl transition-transform duration-100 cursor-grab active:cursor-grabbing origin-center select-none" alt="Fabric Tailoring Extreme Zoom" onmousedown="startPan(event)" ontouchstart="startPan(event)" />
+        </div>
+
+        <!-- Bottom Status indicators -->
+        <div class="w-full max-w-lg mx-auto text-center relative z-10 bg-zinc-900/35 border border-zinc-850 backdrop-blur rounded-lg p-3 space-y-1 mb-2">
+          <p class="text-[9.5px] text-zinc-300 font-sans tracking-wide">
+            💡 <strong>Interact:</strong> Scroll wheel or pinch to zoom. Left-click/touch and drag to pan stitching texture.
+          </p>
+          <div class="flex items-center justify-center gap-4 text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest">
+            <span id="zoom-status-ratio">ZOOM: 100%</span>
+            <span>•</span>
+            <span id="zoom-status-size">HIGH DEFINITION VIEW</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SCRIPT INFRASTRUCTURE -->
+    <script>
+      // ==========================================
+      // FIREBASE WEB SDK v9 SPECIFIC CONFIGURATION
+      // ==========================================
+      const firebaseConfig = {
+        apiKey: "AIzaSyPlaceholderYOUR_API_KEY_HERE",
+        authDomain: "bu-fashion-portfolio.firebaseapp.com",
+        projectId: "bu-fashion-portfolio",
+        storageBucket: "bu-fashion-portfolio.appspot.com",
+        messagingSenderId: "123456789012",
+        appId: "1:123456789012:web:abcdef1234567890"
+      };
+
+      // Initialize Firebase Web SDK safely and asynchronously from applet config
+      let auth = null;
+      let googleProvider = null;
+      let db = null;
+      let firebaseInitializedPromise = null;
+
+      async function initializeFirebaseAndServices() {
+        if (firebaseInitializedPromise) return firebaseInitializedPromise;
+
+        firebaseInitializedPromise = (async () => {
+          let config = { ...firebaseConfig };
+          try {
+            // Check if a platform-provided configuration is present at the workspace root
+            const response = await fetch('/firebase-applet-config.json');
+            if (response.ok) {
+              const fileConfig = await response.json();
+              if (fileConfig && fileConfig.apiKey && fileConfig.apiKey !== 'YOUR_API_KEY') {
+                config = fileConfig;
+                console.log("Loaded actual Firebase config from applet-config.json for project:", config.projectId);
+              }
+            }
+          } catch (e) {
+            console.log("No custom firebase-applet-config found, falling back to built-in project configuration.", e);
+          }
+
+          try {
+            if (typeof firebase !== 'undefined') {
+              firebase.initializeApp(config);
+              auth = firebase.auth();
+              googleProvider = new firebase.auth.GoogleAuthProvider();
+              googleProvider.setCustomParameters({ prompt: 'select_account' });
+              db = firebase.firestore();
+              console.log("Firebase and Firestore initialized successfully. Active Project:", config.projectId);
+              return true;
+            } else {
+              console.error("Firebase SDK script is undefined. Rendering from local fallback repository.");
+              return false;
+            }
+          } catch (err) {
+            console.error("Failed to initialize Firebase Services:", err);
+            return false;
+          }
+        })();
+
+        return firebaseInitializedPromise;
+      }
+
+      // 9 High-fashion authentic photos from Unsplash for proof of 3 rows of 3 images (9 looks per page)
+      const baseMockPostList = [
+        {
+          id: 1,
+          title: "Chroma Embrace",
+          designer: "Le Courge",
+          season: "2026/AW",
+          materials: "Structured heavy wool, polyurethane fill",
+          image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+          desc: "A striking volumetric look exploring raw, monochromatic high-saturation yellow wool fabric. The garment features asymmetrical draped lines contrasted elegantly against high fashion geometric silhouettes."
+        },
+        {
+          id: 2,
+          title: "Silent Symmetry",
+          designer: "Kai-Yang",
+          season: "2026/SS",
+          materials: "Layered deconstructed linen, organic raw cotton",
+          image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800&auto=format&fit=crop",
+          desc: "Clean layers of deconstructed, untreated earth-tone organic fiber garments designed with absolute structural symmetry. Incorporates deep textured pleating and subtle hand-sewn details."
+        },
+        {
+          id: 3,
+          title: "Dark Monospace",
+          designer: "Maison Altier",
+          season: "2025/FW",
+          materials: "Sheer silk chiffon, archival stretch jersey",
+          image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop",
+          desc: "Sculptural black knitwear coupled with fluid sheer panelings to frame raw lighting contrast and architectural bodily shadows. The piece embodies moody avant-garde luxury and delicate tailoring."
+        },
+        {
+          id: 4,
+          title: "Crimson Drapery",
+          designer: "Marta Valery",
+          season: "2026/PRE",
+          materials: "Pure silk charmeuse, bias-cut lining",
+          image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop",
+          desc: "Fluid drape lines in high-fashion crimson silk highlighting effortless organic motion. Constructed with custom asymmetric hems and bias tailoring tailored to present structural flair."
+        },
+        {
+          id: 5,
+          title: "The Nomad Coat",
+          designer: "Atelier Studio",
+          season: "2026/AW",
+          materials: "Double-faced cashmere, horn button accents",
+          image: "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=800&auto=format&fit=crop",
+          desc: "An oversized double-breasted outerwear masterpiece styled with rich earth tones and structured shoulder lines. The coat represents raw utilitarian deconstruction in high-society spaces."
+        },
+        {
+          id: 6,
+          title: "Cerulean Form",
+          designer: "Studio Silt",
+          season: "2026/N3",
+          materials: "Technical polymer mesh, lightweight neoprene",
+          image: "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?q=80&w=800&auto=format&fit=crop",
+          desc: "Bold cobalt blue structured drapery pushing bounds with technical polymer textiles. Represents abstract geometry mimicking oceanic waves cascading around the shoulders."
+        },
+        {
+          id: 7,
+          title: "Geometric Pleats",
+          designer: "Hanae Oro",
+          season: "2025/SS",
+          materials: "Thermo-set pleated georgette, silk organza",
+          image: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=800&auto=format&fit=crop",
+          desc: "Ultra-fine razor-sharp origami micropleats forming beautiful organic sculptural volumes. The item is built from technical lightweight textiles that maintain architectural form in motion."
+        },
+        {
+          id: 8,
+          title: "Brutalist Leather",
+          designer: "Verducci",
+          season: "2026/FW",
+          materials: "Full grain vegetable-tanned leather, heavy zip",
+          image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop",
+          desc: "Sculpted brutalist high-collar jacket constructed of vegetable tanned leather panels. Each seam is explicitly exposed, accentuating geometric body framework and vintage dye craft."
+        },
+        {
+          id: 9,
+          title: "Sand Wrap",
+          designer: "Loom & Hue",
+          season: "2026/SS",
+          materials: "Raw hemp weave, nettle fiber thread",
+          image: "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=800&auto=format&fit=crop",
+          desc: "A stunning tactile wrap silhouette using wild-harvested raw organic fibers. Emphasizes sustainability with textured weaves and unbleached sand palettes designed for editorial portfolios."
+        }
+      ];
+
+      const mockPostList = [];
+      const designers = ["Le Courge", "Kai-Yang", "Maison Altier", "Marta Valery", "Atelier Studio", "Studio Silt", "Hanae Oro", "Verducci", "Loom & Hue", "Yves Noir", "Valkyrie Design", "Aether Couture", "Sleek Carbon", "Zephyr Line", "Onyx & Clay", "Drape Lab", "Knit Core", "Sartoria Bloom", "Bespoke Void", "Chromo Craft", "Stella Nova", "Aion Atelier", "Enigma House", "Gilded Raw", "Kinetic Mono"];
+      const titles = ["Chroma Embrace", "Silent Symmetry", "Dark Monospace", "Crimson Drapery", "The Nomad Coat", "Cerulean Form", "Geometric Pleats", "Brutalist Leather", "Sand Wrap", "Nocturnal Mesh", "Kinetic Shell", "Alabaster Wrap", "Obsidian Fold", "Prism Armor", "Thermal Drape", "Fluid Vapor", "Asymmetric Crepe", "Linear Rawness", "Structured Wool", "Aether Trench", "Padded Cocoon", "Woven Monolith", "Glacier Suit", "Volcanic Vest", "Linen Canvas", "Origami Collar", "Sculpted Sheer", "Raw Corduroy", "Minimalist Parka", "Spectral Silk"];
+      const seasons = ["2025/SS", "2025/FW", "2026/SS", "2026/AW", "2026/PRE", "2027/AW", "2027/SS", "Archival 2026"];
+      const materialsList = ["Structured heavy wool, polyurethane fill", "Layered deconstructed linen, organic raw cotton", "Sheer silk chiffon, archival stretch jersey", "Pure silk charmeuse, bias-cut lining", "Double-faced cashmere, horn button accents", "Technical polymer mesh, lightweight neoprene", "Thermo-set pleated georgette, silk organza", "Full grain vegetable-tanned leather, heavy zip", "Raw hemp weave, nettle fiber thread", "Structured raw Japanese denim, nylon web", "Recycled high-density ripstop, bonded fleece", "Heavy-weight organic canvas, brass rivets", "Brushed alpaca yarn, silk-sateen trim", "Merino waffle knit, memory wire inserts", "Pleated polyurethane laminate, micro-fleece", "Double-dyed vintage silk, hand-twisted wool"];
+      const locations = ["Studio 11, BU Diamond", "BU Campus Main Hall", "Creative Hub Space C", "Exhibition Floor 2", "Textile Lab, BU Science", "Workshop Room 04", "Central Atrium, BU Diamond", "Outdoor Pavilion", "Design Studio 8", "Atelier Wing A", "BU Runway Sandbox"];
+      const images = [
+        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1509319117193-57bab727e09d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1518049360754-ee512a297aee?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1505022610485-0249ba5b3675?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1554412933-514a83d2f3c8?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1537832816519-689ad163238b?q=80&w=800&auto=format&fit=crop"
+      ];
+
+      for (let i = 1; i <= 90; i++) {
+        const baseIndex = (i - 1) % baseMockPostList.length;
+        const baseItem = baseMockPostList[baseIndex];
+        
+        if (i <= 9) {
+          mockPostList.push({
+            id: i,
+            title: baseItem.title,
+            designer: baseItem.designer,
+            season: baseItem.season,
+            materials: baseItem.materials,
+            location: locations[(i - 1) % locations.length],
+            image: baseItem.image,
+            desc: baseItem.desc
+          });
+        } else {
+          const dIdx = (i * 7) % designers.length;
+          const tIdx = (i * 13) % titles.length;
+          const sIdx = (i * 3) % seasons.length;
+          const mIdx = (i * 11) % materialsList.length;
+          const lIdx = (i * 17) % locations.length;
+          const imgUrl = images[i % images.length];
+          
+          mockPostList.push({
+            id: i,
+            title: `${titles[tIdx]} Look ${String(i).padStart(2, '0')}`,
+            designer: designers[dIdx],
+            season: seasons[sIdx],
+            materials: materialsList[mIdx],
+            location: locations[lIdx],
+            image: imgUrl,
+            desc: `This exquisite architectural look belongs to collection concept #${i}. Created in our central laboratory under strict artistic curation, this garment demonstrates rich avant-garde tailored proportions coupled with extreme material innovation suitable for high fashion editorial representation.`
+          });
+        }
+      }
+
+      // Master local reactive state
+      let posts = [...mockPostList];
+      let isAuthenticated = false;
+      let selectedMediaType = 'IMAGE'; // IMAGE or VIDEO
+      let selectedMediaChannel = 'UPLOAD_IMAGE'; // 'UPLOAD_IMAGE', 'IMAGE_LINK', 'VIDEO_LINK'
+      let uploadedImageSrc = '';
+      let compressedBase64 = '';
+      let currentPage = 1;
+      const itemsPerPage = 9;
+
+      // Adaptive compression and video states
+      let selectedQualityPreset = 'balanced'; // 'speed', 'balanced', 'retina'
+      let videoSourceType = 'link'; // 'link', 'file'
+      let uploadedVideoSrc = ''; // Loaded direct video loop Base64 string
+
+      // Firestore connection and error standard handling helper
+      function handleFirestoreError(error, operationType, path) {
+        const currentUser = auth ? auth.currentUser : null;
+        const errInfo = {
+          error: error instanceof Error ? error.message : String(error),
+          authInfo: {
+            userId: currentUser ? currentUser.uid : null,
+            email: currentUser ? currentUser.email : null,
+            emailVerified: currentUser ? currentUser.emailVerified : null,
+            isAnonymous: currentUser ? currentUser.isAnonymous : null,
+            tenantId: currentUser ? currentUser.tenantId : null,
+            providerInfo: currentUser ? currentUser.providerData?.map(p => ({
+              providerId: p.providerId,
+              email: p.email,
+            })) || [] : []
+          },
+          operationType,
+          path
+        };
+        console.error('Firestore Error details:', JSON.stringify(errInfo));
+        notifySystem('Database Error: ' + errInfo.error, true);
+        throw new Error(JSON.stringify(errInfo));
+      }
+
+      function connectRealtimeFeed() {
+        if (!db) {
+          console.warn("Firestore instance is not ready yet.");
+          return;
+        }
+        
+        console.log("Subscribing to real-time 'fashion_posts' updates...");
+        db.collection('fashion_posts')
+          .orderBy('createdAt', 'desc')
+          .onSnapshot((snapshot) => {
+            const list = [];
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              const mType = data.mediaType || 'upload_image';
+              const isVideo = (mType === 'video');
+              const mUrl = data.mediaUrl || '';
+              
+              list.push({
+                id: doc.id,
+                title: data.title || "Untitled Garment",
+                designer: data.designer || "Unknown Designer",
+                season: data.season || "2026/AW",
+                materials: data.materials || "Undisclosed materials",
+                location: data.location || "N/A",
+                mediaType: mType,
+                mediaUrl: mUrl,
+                videoUrl: isVideo ? mUrl : '',
+                image: isVideo ? 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop' : mUrl,
+                desc: data.desc || "No narrative specified.",
+                createdAt: data.createdAt
+              });
+            });
+
+            posts = list;
+            if (posts.length === 0) {
+              posts = [...mockPostList];
+            }
+            
+            currentPage = 1;
+            renderArchives();
+            console.log(`Successfully synced ${posts.length} looks with Firestore.`);
+          }, (error) => {
+            console.warn("Firestore onSnapshot subscription failed or permission is denied:", error);
+            // Fall back gracefully to pristine high-fashion mockup states so that UI remains fully interactive
+            posts = [...mockPostList];
+            currentPage = 1;
+            renderArchives();
+            
+            try {
+              handleFirestoreError(error, 'list', 'fashion_posts');
+            } catch (errTracking) {
+              console.log("Firestore error tracking logged successfully:", errTracking.message);
+            }
+          });
+      }
+
+      // Initialize UI on load
+      window.addEventListener('DOMContentLoaded', async () => {
+        // Initialize interactive icons
+        lucide.createIcons();
+        
+        // Asynchronously configure and initialize Firebase services
+        const initialized = await initializeFirebaseAndServices();
+        
+        // Start real-time Firestore sync or render mock archives as fallback
+        if (initialized && db) {
+          // Verify connection to Firestore - critical connection audit check
+          db.collection('test').doc('connection').get({ source: 'server' }).catch(e => {
+            console.log("Firestore connection check run complete or offline state:", e);
+          });
+          connectRealtimeFeed();
+        } else {
+          renderArchives();
+        }
+
+        // Check persistent authentication state via onAuthStateChanged
+        if (auth) {
+          auth.onAuthStateChanged((user) => {
+            if (user) {
+              const email = (user.email || "").toLowerCase();
+              if (email.endsWith('@bumail.net')) {
+                isAuthenticated = true;
+                updateUIForLoggedInUser(user);
+              } else {
+                // Instantly sign out unauthorized domains
+                auth.signOut().then(() => {
+                  isAuthenticated = false;
+                  updateUIForLoggedOutUser();
+                  notifySystem('Access Denied: Only @bumail.net students allowed.', true);
+                });
+              }
+            } else {
+              isAuthenticated = false;
+              updateUIForLoggedOutUser();
+            }
+          });
+        }
+
+        // Assign core events with Google Auth Flows
+        document.getElementById('auth-btn').addEventListener('click', () => {
+          if (!isAuthenticated) {
+            handleGoogleSignIn();
+          } else {
+            handleGoogleSignOut();
+          }
+        });
+
+        document.getElementById('add-fab').addEventListener('click', () => {
+          toggleAddDrawer(true);
+        });
+
+        // Set up drag and drop detection
+        initDragAndDrop();
+      });
+
+      // Render items inside the central DOM grid
+      function renderArchives() {
+        const grid = document.getElementById('posts-container');
+        const emptyState = document.getElementById('empty-state');
+        const badge = document.getElementById('state-badge');
+        const paginationControls = document.getElementById('pagination-controls');
+        const pageIndicator = document.getElementById('page-indicator');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+
+        // Handle total pages calculation
+        const totalPages = Math.ceil(posts.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) {
+          currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+          currentPage = 1;
+        }
+
+        emptyState.classList.add('hidden');
+        paginationControls.classList.add('hidden');
+        grid.innerHTML = '';
+
+        if (posts.length === 0) {
+          // Display elegant empty state
+          emptyState.classList.remove('hidden');
+          grid.classList.add('hidden');
+          badge.textContent = '0 items (empty)';
+          badge.className = "text-[8px] uppercase tracking-widest font-mono px-1.5 py-0.5 bg-red-50 text-red-500 rounded";
+        } else {
+          grid.classList.remove('hidden');
+          paginationControls.classList.remove('hidden');
+          paginationControls.classList.add('flex');
+          
+          badge.textContent = `${posts.length} looks loaded`;
+          badge.className = "text-[8px] uppercase tracking-widest font-mono px-1.5 py-0.5 bg-zinc-50 text-zinc-600 rounded";
+
+          // Slice posts for current page (3 rows, max 9 looks total per page)
+          const startIndex = (currentPage - 1) * itemsPerPage;
+          const paginatedPosts = posts.slice(startIndex, startIndex + itemsPerPage);
+
+          paginatedPosts.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = "group relative aspect-square bg-zinc-150 overflow-hidden cursor-pointer select-none animate-fade-in border border-zinc-200/20";
+            // Staggered fade in delay animation
+            card.style.animationDelay = `${index * 40}ms`;
+            
+            // Determine media format classes conforming to high-fidelity definitions
+            const typeLower = (item.mediaType || '').toLowerCase();
+            const isVideo = (typeLower === 'video');
+            const isUploadImage = (typeLower === 'upload_image');
+            const isLinkImage = (typeLower === 'link_image');
+            const isLegacyImage = (typeLower === 'image' || typeLower === 'img');
+            const isImage = isUploadImage || isLinkImage || isLegacyImage || !typeLower;
+
+            const mUrl = (item.videoUrl || item.mediaUrl || '').trim();
+            const isDirectLocalVideo = isVideo && (mUrl.startsWith('data:video/') || mUrl.endsWith('.mp4') || mUrl.endsWith('.webm'));
+            
+            let mediaHtml = '';
+            let videoIndicator = '';
+
+            if (isImage) {
+              const imgUrl = item.mediaUrl || item.image || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop';
+              mediaHtml = `
+                <img src="${imgUrl}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
+              `;
+            } else if (isVideo) {
+              const bgImg = item.image || item.mediaUrl;
+              const hasExternalThumb = bgImg && bgImg.startsWith('http') && !bgImg.endsWith('.mp4') && !bgImg.endsWith('.webm');
+              
+              if (isDirectLocalVideo) {
+                mediaHtml = `
+                  <video src="${mUrl}" autoplay loop muted playsinline class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"></video>
+                `;
+              } else if (hasExternalThumb) {
+                mediaHtml = `
+                  <div class="w-full h-full relative bg-zinc-950">
+                    <img src="${bgImg}" alt="${item.title}" class="w-full h-full object-cover opacity-60 transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
+                  </div>
+                `;
+              } else {
+                mediaHtml = `
+                  <div class="w-full h-full relative bg-zinc-950 flex flex-col items-center justify-center p-4">
+                    <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black opacity-90"></div>
+                    <span class="text-[7px] uppercase tracking-[0.2em] font-mono text-zinc-650 block mb-1 group-hover:text-zinc-455 transition-colors z-10">${item.season || 'ARCHIVAL'}</span>
+                    <span class="font-serif italic text-[11px] text-zinc-500 text-center truncate w-[85%] group-hover:text-zinc-350 transition-colors z-10">${item.title}</span>
+                  </div>
+                `;
+              }
+
+              videoIndicator = `
+                <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors duration-300 z-10 pointer-events-none">
+                  <div class="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/25 flex items-center justify-center transition-transform group-hover:scale-110">
+                    <i data-lucide="play" class="w-3.5 h-3.5 text-white fill-white ml-0.5 animate-pulse"></i>
+                  </div>
+                </div>
+                <div class="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-sm px-2 py-0.5 rounded text-[7px] text-white tracking-widest font-mono flex items-center gap-1 z-10 transition-opacity group-hover:opacity-0 duration-300">
+                  <div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                  <span>REEL</span>
+                </div>
+              `;
+            } else {
+              const imgUrl = item.mediaUrl || item.image || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop';
+              mediaHtml = `
+                <img src="${imgUrl}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
+              `;
+            }
+
+            card.innerHTML = `
+              ${mediaHtml}
+              ${videoIndicator}
+              <!-- Seamless high contrast overlay on hover/focus -->
+              <div class="absolute inset-0 bg-black/80 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end">
+                <span class="text-[8px] uppercase tracking-[0.25em] font-medium text-zinc-400 leading-none mb-1">${item.designer}</span>
+                <h4 class="font-serif text-[13px] text-white font-light italic truncate">${item.title}</h4>
+                <p class="text-[8px] text-zinc-400 mt-1 font-sans tracking-widest border-t border-zinc-800 pt-1 flex items-center justify-between">
+                  <span>DETAILS</span>
+                  <i data-lucide="expand" class="w-2.5 h-2.5"></i>
+                </p>
+              </div>
+            `;
+            
+            card.addEventListener('click', () => {
+              openDetailArchive(item);
+            });
+
+            grid.appendChild(card);
+          });
+
+          // Update Pagination status labels & buttons
+          const paddedCurrent = String(currentPage).padStart(2, '0');
+          const paddedTotal = String(totalPages).padStart(2, '0');
+          pageIndicator.textContent = `${paddedCurrent} / ${paddedTotal}`;
+
+          if (currentPage === 1) {
+            prevPageBtn.classList.add('opacity-30', 'pointer-events-none');
+          } else {
+            prevPageBtn.classList.remove('opacity-30', 'pointer-events-none');
+          }
+
+          if (currentPage === totalPages) {
+            nextPageBtn.classList.add('opacity-30', 'pointer-events-none');
+          } else {
+            nextPageBtn.classList.remove('opacity-30', 'pointer-events-none');
+          }
+          
+          // Re-trigger icon rendering
+          lucide.createIcons();
+        }
+      }
+
+      // Handle page switches elegantly
+      function goToPage(pageNum) {
+        const totalPages = Math.ceil(posts.length / itemsPerPage) || 1;
+        if (pageNum >= 1 && pageNum <= totalPages) {
+          currentPage = pageNum;
+          
+          // Add visual fadeout transition effect to posts grid
+          const grid = document.getElementById('posts-container');
+          grid.classList.add('opacity-40');
+          
+          setTimeout(() => {
+            renderArchives();
+            grid.classList.remove('opacity-40');
+            // Smoothly scroll to top of the main feed viewport
+            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+          }, 150);
+        }
+      }
+
+        // Open Post Archive details view panel
+       function openDetailArchive(item) {
+         document.getElementById('detail-title').textContent = item.title;
+         document.getElementById('detail-designer').textContent = item.designer;
+         document.getElementById('detail-season').textContent = item.season;
+         document.getElementById('detail-desc').textContent = item.desc;
+         
+         // Dynamically handle adaptive media presentation (Images vs Direct loop mp4 files vs embedded playlist clips)
+         updateDetailMedia(item);
+
+         const matBox = document.getElementById('detail-materials');
+         const matRow = document.getElementById('detail-material-row');
+         if (item.materials && item.materials.trim() !== '') {
+           matBox.textContent = item.materials;
+           matRow.classList.remove('hidden');
+         } else {
+           matRow.classList.add('hidden');
+         }
+
+         const locBox = document.getElementById('detail-location');
+         const locRow = document.getElementById('detail-location-row');
+         if (item.location && item.location.trim() !== '') {
+           locBox.textContent = item.location;
+           locRow.classList.remove('hidden');
+         } else {
+           matRow.classList.add('hidden');
+         }
+
+         const videoRow = document.getElementById('detail-video-row');
+         const videoLink = document.getElementById('detail-video-link');
+         const isVideoItem = (item.mediaType === 'video' || item.mediaType === 'VIDEO');
+         const finalUrl = (item.videoUrl || item.mediaUrl || '').trim();
+         
+         if (isVideoItem && finalUrl !== '') {
+           videoLink.href = finalUrl;
+           videoRow.classList.remove('hidden');
+         } else {
+           videoRow.classList.add('hidden');
+         }
+
+         toggleDetailDrawer(true);
+       }
+
+       // Adaptive dynamic media presentation system
+       function updateDetailMedia(item) {
+         const imgEl = document.getElementById('detail-img');
+         const videoContainer = document.getElementById('detail-video-container');
+         
+         // Setup safe visual fallback
+         imgEl.classList.add('hidden');
+         videoContainer.classList.add('hidden');
+         videoContainer.innerHTML = '';
+         
+         const isVideoItem = (item.mediaType === 'video' || item.mediaType === 'VIDEO');
+         const mUrl = (item.videoUrl || item.mediaUrl || '').trim();
+         
+         if (isVideoItem && mUrl !== '') {
+           videoContainer.classList.remove('hidden');
+           const zoomBtn = document.getElementById('detail-zoom-btn');
+           if (zoomBtn) zoomBtn.classList.add('hidden');
+           
+           // Direct uploaded Base64 or local server .mp4/.webm loop video files
+           if (mUrl.startsWith('data:video/') || mUrl.endsWith('.mp4') || mUrl.endsWith('.webm') || mUrl.includes('.mp4?')) {
+             videoContainer.innerHTML = `
+               <video src="${mUrl}" autoplay loop muted playsinline controls class="w-full h-full object-cover">
+                 Your browser does not support high resolution fashion loop reels.
+               </video>
+             `;
+           }
+           // YouTube or Shorts Links
+           else if (mUrl.includes('youtube.com/') || mUrl.includes('youtu.be/') || mUrl.includes('youtube-nocookie.com/')) {
+             let vidId = '';
+             if (mUrl.includes('youtube.com/watch?v=')) {
+               vidId = mUrl.split('v=')[1]?.split('&')[0] || '';
+             } else if (mUrl.includes('youtu.be/')) {
+               vidId = mUrl.split('youtu.be/')[1]?.split('?')[0] || '';
+             } else if (mUrl.includes('youtube.com/shorts/')) {
+               vidId = mUrl.split('/shorts/')[1]?.split('?')[0] || '';
+             }
+             
+             if (vidId) {
+               videoContainer.innerHTML = `
+                 <iframe src="https://www.youtube.com/embed/${vidId}?autoplay=1&mute=1&loop=1&playlist=${vidId}&controls=1" class="w-full h-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+               `;
+             } else {
+               renderVideoFallbackLink(mUrl, videoContainer);
+             }
+           }
+           // Google Drive Preview Embedded link
+           else if (mUrl.includes('drive.google.com/')) {
+             let driveId = '';
+             const parts = mUrl.split('/d/');
+             if (parts[1]) {
+               driveId = parts[1].split('/')[0] || '';
+             }
+             if (driveId) {
+               videoContainer.innerHTML = `
+                 <iframe src="https://drive.google.com/file/d/${driveId}/preview" class="w-full h-full border-0" allow="autoplay" allowfullscreen></iframe>
+               `;
+             } else {
+               renderVideoFallbackLink(mUrl, videoContainer);
+             }
+           }
+           // Vimeo Embed resolver
+           else if (mUrl.includes('vimeo.com/')) {
+             let vimeoId = mUrl.split('vimeo.com/')[1]?.split('?')[0] || '';
+             if (vimeoId) {
+               videoContainer.innerHTML = `
+                 <iframe src="https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1" class="w-full h-full border-0" allow="autoplay; fullscreen" allowfullscreen></iframe>
+               `;
+             } else {
+               renderVideoFallbackLink(mUrl, videoContainer);
+             }
+           }
+           // General Fallback
+           else {
+             renderVideoFallbackLink(mUrl, videoContainer);
+           }
+         } else {
+           // Display static high resolution picture
+           const zoomBtn = document.getElementById('detail-zoom-btn');
+           if (zoomBtn) {
+             zoomBtn.classList.remove('hidden');
+           }
+           imgEl.classList.remove('hidden');
+           imgEl.src = item.image || item.mediaUrl || 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop';
+         }
+       }
+
+       function renderVideoFallbackLink(mUrl, container) {
+         container.innerHTML = `
+           <div class="flex flex-col items-center justify-center p-6 text-center text-zinc-350 w-full h-full max-w-[85%] mx-auto space-y-4">
+              <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/15">
+                <i data-lucide="video" class="w-5 h-5 text-rose-500"></i>
+              </div>
+              <div class="space-y-1">
+                <span class="text-[9px] font-mono tracking-widest text-zinc-400 block uppercase font-bold">External Stream Hub</span>
+                <p class="text-[9.5px] text-zinc-500 font-sans italic">Frame streaming locks might block iframe embeds. Open safely to watch.</p>
+              </div>
+              <a href="${mUrl}" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 bg-zinc-900 border border-zinc-850 hover:bg-black text-white text-[9px] font-mono uppercase tracking-[0.16em] rounded transition-colors pointer-events-auto flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open External Reel
+              </a>
+           </div>
+         `;
+         if (typeof lucide !== 'undefined') {
+           lucide.createIcons();
+         }
+       }
+
+      // Firebase Auth Real Interaction Handlers
+      function handleGoogleSignIn() {
+        if (!auth || !googleProvider) {
+          notifySystem('Firebase state not configured. Please supply keys.', true);
+          return;
+        }
+        auth.signInWithPopup(googleProvider)
+          .then((result) => {
+            const user = result.user;
+            const email = (user.email || "").toLowerCase();
+            if (email.endsWith('@bumail.net')) {
+              isAuthenticated = true;
+              updateUIForLoggedInUser(user);
+              notifySystem(`Welcome, ${user.displayName || 'student'}`);
+            } else {
+              auth.signOut().then(() => {
+                isAuthenticated = false;
+                updateUIForLoggedOutUser();
+                notifySystem('Access Denied: Only @bumail.net students allowed.', true);
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Google Sign-In failed:", error);
+            if (error.code === 'auth/popup-blocked') {
+              notifySystem('Sign-In Popup was blocked. Please enable popups.', true);
+            } else if (error.code !== 'auth/popup-closed-by-user') {
+              notifySystem(`Sign-In Error: ${error.message}`, true);
+            }
+          });
+      }
+
+      function handleGoogleSignOut() {
+        if (!auth) return;
+        auth.signOut()
+          .then(() => {
+            isAuthenticated = false;
+            updateUIForLoggedOutUser();
+            notifySystem('Logged out successfully');
+          })
+          .catch((err) => {
+            console.error("Sign out error:", err);
+            notifySystem('Error during sign out', true);
+          });
+      }
+
+      function updateUIForLoggedInUser(user) {
+        const authBtn = document.getElementById('auth-btn');
+        const photoUrl = user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop';
+        authBtn.innerHTML = `
+          <img src="${photoUrl}" referrerpolicy="no-referrer" class="w-4 h-4 rounded-full object-cover border border-zinc-200" />
+          <span class="font-semibold text-zinc-800 hover:text-black border-b border-black pb-0.5">SIGN OUT</span>
+        `;
+        authBtn.className = "flex-shrink-0 text-[10px] tracking-widest uppercase font-medium text-zinc-650 hover:text-black transition-all duration-300 flex items-center gap-2 cursor-pointer pb-1";
+
+        // Unhide Floating Action Button with fluid animation
+        const fab = document.getElementById('add-fab');
+        if (fab) {
+          fab.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+          fab.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        }
+      }
+
+      function updateUIForLoggedOutUser() {
+        const authBtn = document.getElementById('auth-btn');
+        authBtn.innerHTML = `
+          <span>SIGN IN</span>
+          <i data-lucide="arrow-right" class="w-3 h-3 text-zinc-400"></i>
+        `;
+        authBtn.className = "flex-shrink-0 text-[10px] tracking-widest uppercase font-bold border-b border-black pb-1 hover:text-zinc-500 hover:border-zinc-500 transition-colors uppercase flex items-center gap-1.5 cursor-pointer";
+
+        // Hide Floating Action Button
+        const fab = document.getElementById('add-fab');
+        if (fab) {
+          fab.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+          fab.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        }
+        
+        lucide.createIcons();
+      }
+
+      // Drawer Visual Animations
+      function toggleAuthDrawer(open) {
+        // Redundant as Google POPUP is used now, but kept safe to avoid any external binding errors
+        const drawer = document.getElementById('auth-drawer');
+        if (!drawer) return;
+        const modal = drawer.querySelector('div');
+        if (open) {
+          drawer.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => modal.classList.remove('translate-y-full'), 10);
+        } else {
+          modal.classList.add('translate-y-full');
+          setTimeout(() => drawer.classList.add('opacity-0', 'pointer-events-none'), 350);
+        }
+      }
+
+      // Action Handlers
+      function toggleAddDrawer(open) {
+        const drawer = document.getElementById('add-drawer');
+        const modal = drawer.querySelector('div');
+        if (open) {
+          drawer.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => {
+            modal.classList.remove('scale-95', 'opacity-0');
+            modal.classList.add('scale-100', 'opacity-100');
+          }, 10);
+          resetFormFields();
+        } else {
+          modal.classList.add('scale-95', 'opacity-0');
+          modal.classList.remove('scale-100', 'opacity-100');
+          setTimeout(() => {
+            drawer.classList.add('opacity-0', 'pointer-events-none');
+          }, 350);
+        }
+      }
+
+      function toggleDetailDrawer(open) {
+        const drawer = document.getElementById('detail-drawer');
+        const modal = drawer.querySelector('div');
+        if (open) {
+          drawer.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => modal.classList.remove('translate-y-full'), 10);
+        } else {
+          modal.classList.add('translate-y-full');
+          setTimeout(() => {
+            drawer.classList.add('opacity-0', 'pointer-events-none');
+            // Clean dynamic player embeds
+            const videoContainer = document.getElementById('detail-video-container');
+            if (videoContainer) {
+              videoContainer.innerHTML = '';
+            }
+          }, 350);
+        }
+      }
+
+      // ==========================================
+      // INTEGRATED HD DEEP ZOOM & PANNING ENGINE
+      // ==========================================
+      let currentZoom = 1.0;
+      const minZoom = 0.5;
+      const maxZoom = 5.0;
+      let isPanning = false;
+      let startX = 0, startY = 0;
+      let panX = 0, panY = 0;
+      let isZoomEventsBound = false;
+
+      function updateZoomTransform() {
+        const img = document.getElementById('zoom-lightbox-img');
+        if (!img) return;
+        
+        if (isPanning) {
+          img.style.transition = 'none';
+        } else {
+          img.style.transition = 'transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)';
+        }
+        
+        img.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+        
+        // Update ratios
+        const ratioEl = document.getElementById('zoom-status-ratio');
+        if (ratioEl) {
+          ratioEl.textContent = `ZOOM: ${Math.round(currentZoom * 100)}%`;
+        }
+      }
+
+      function initZoomLightboxEvents() {
+        if (isZoomEventsBound) return; // Bind only once
+        const wrapper = document.getElementById('lightbox-image-wrapper');
+        if (!wrapper) return;
+        
+        // Mouse wheel scroll to expand/zoom
+        wrapper.addEventListener('wheel', function(e) {
+          e.preventDefault();
+          const delta = e.deltaY > 0 ? -0.18 : 0.18;
+          const prevZoom = currentZoom;
+          currentZoom = Math.min(Math.max(currentZoom + delta, minZoom), maxZoom);
+          
+          if (currentZoom !== prevZoom) {
+            updateZoomTransform();
+          }
+        }, { passive: false });
+
+        // Touch gesture pinch to zoom support
+        let initialTouchDist = 0;
+        wrapper.addEventListener('touchstart', function(e) {
+          if (e.touches.length === 2) {
+            initialTouchDist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+          }
+        }, { passive: true });
+
+        wrapper.addEventListener('touchmove', function(e) {
+          if (e.touches.length === 2 && initialTouchDist > 0) {
+            if (e.cancelable) e.preventDefault();
+            const currentDist = Math.hypot(
+              e.touches[0].clientX - e.touches[1].clientX,
+              e.touches[0].clientY - e.touches[1].clientY
+            );
+            const ratio = currentDist / initialTouchDist;
+            
+            const prevZoom = currentZoom;
+            currentZoom = Math.min(Math.max(currentZoom * ratio, minZoom), maxZoom);
+            initialTouchDist = currentDist; // refresh state
+            
+            if (currentZoom !== prevZoom) {
+              updateZoomTransform();
+            }
+          }
+        }, { passive: false });
+
+        isZoomEventsBound = true;
+      }
+
+      function startPan(e) {
+        e.preventDefault();
+        isPanning = true;
+        
+        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+        
+        startX = clientX - panX;
+        startY = clientY - panY;
+        
+        document.addEventListener('mousemove', handlePan);
+        document.addEventListener('mouseup', endPan);
+        document.addEventListener('touchmove', handlePan, { passive: false });
+        document.addEventListener('touchend', endPan);
+      }
+
+      function handlePan(e) {
+        if (!isPanning) return;
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        
+        const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+        
+        panX = clientX - startX;
+        panY = clientY - startY;
+        
+        updateZoomTransform();
+      }
+
+      function endPan() {
+        isPanning = false;
+        document.removeEventListener('mousemove', handlePan);
+        document.removeEventListener('mouseup', endPan);
+        document.removeEventListener('touchmove', handlePan);
+        document.removeEventListener('touchend', endPan);
+        
+        const img = document.getElementById('zoom-lightbox-img');
+        if (img) {
+          img.style.transition = 'transform 0.18s cubic-bezier(0.16, 1, 0.3, 1)';
+        }
+      }
+
+      function changeZoomFactor(factor) {
+        const prevZoom = currentZoom;
+        currentZoom = Math.min(Math.max(currentZoom * factor, minZoom), maxZoom);
+        if (currentZoom !== prevZoom) {
+          updateZoomTransform();
+        }
+      }
+
+      function resetZoomPanning() {
+        currentZoom = 1.0;
+        panX = 0;
+        panY = 0;
+        updateZoomTransform();
+      }
+
+      function openImageZoom() {
+        const mainImg = document.getElementById('detail-img');
+        const lightbox = document.getElementById('zoom-lightbox');
+        const lightboxImg = document.getElementById('zoom-lightbox-img');
+        
+        if (!mainImg || !lightbox || !lightboxImg) return;
+        
+        lightboxImg.src = mainImg.src;
+        
+        const titleText = document.getElementById('detail-title').textContent;
+        const designerText = document.getElementById('detail-designer').textContent;
+        const lightboxTitleEl = document.getElementById('zoom-lightbox-title');
+        const lightboxLabelEl = document.getElementById('zoom-lightbox-label');
+        
+        if (lightboxTitleEl) lightboxTitleEl.textContent = titleText;
+        if (lightboxLabelEl) lightboxLabelEl.textContent = designerText;
+        
+        // Reset transform values
+        resetZoomPanning();
+        
+        // Show overlay with transit transition
+        lightbox.classList.remove('opacity-0', 'pointer-events-none');
+        
+        initZoomLightboxEvents();
+        
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+        
+        notifySystem('Deep zoom panel active. Pan & zoom available.');
+      }
+
+      function closeZoomLightbox() {
+        const lightbox = document.getElementById('zoom-lightbox');
+        if (lightbox) {
+          lightbox.classList.add('opacity-0', 'pointer-events-none');
+        }
+      }
+
+      // Portfolio Sandbox Override controls (Empty & Feed Switcher)
+      function overrideClear() {
+        posts = [];
+        renderArchives();
+        notifySystem('Portfolio content cleared (Empty State test active)');
+      }
+
+      function overrideRestore() {
+        posts = [...mockPostList];
+        currentPage = 1; // Reset to page 1 too
+        renderArchives();
+        notifySystem('Portfolio content restored (90 mock looks loaded - 10 pages total)');
+      }
+
+      // SVE - Sleek 3-way Media Channel Switcher
+      function switchMediaChannel(channel) {
+        selectedMediaChannel = channel;
+        selectedMediaType = (channel === 'VIDEO_LINK') ? 'VIDEO' : 'IMAGE';
+
+        const uploadImgBtn = document.getElementById('chan-upload-image');
+        const imgLinkBtn = document.getElementById('chan-image-link');
+        const videoLinkBtn = document.getElementById('chan-video-link');
+
+        const uploadImgPanel = document.getElementById('panel-upload-image');
+        const imgLinkPanel = document.getElementById('panel-image-link');
+        const videoLinkPanel = document.getElementById('panel-video-link');
+
+        // Clear error on toggle
+        clearValidationError('media-input');
+
+        if (uploadImgPanel) uploadImgPanel.classList.add('hidden');
+        if (imgLinkPanel) imgLinkPanel.classList.add('hidden');
+        if (videoLinkPanel) videoLinkPanel.classList.add('hidden');
+
+        const activeClass = "py-2 text-center rounded-md bg-white text-black shadow-sm transition-all focus:outline-none cursor-pointer";
+        const inactiveClass = "py-2 text-center text-zinc-400 hover:text-zinc-700 transition-all focus:outline-none cursor-pointer";
+
+        if (uploadImgBtn) uploadImgBtn.className = inactiveClass;
+        if (imgLinkBtn) imgLinkBtn.className = inactiveClass;
+        if (videoLinkBtn) videoLinkBtn.className = inactiveClass;
+
+        if (channel === 'UPLOAD_IMAGE') {
+          if (uploadImgBtn) uploadImgBtn.className = activeClass;
+          if (uploadImgPanel) uploadImgPanel.classList.remove('hidden');
+        } else if (channel === 'IMAGE_LINK') {
+          if (imgLinkBtn) imgLinkBtn.className = activeClass;
+          if (imgLinkPanel) imgLinkPanel.classList.remove('hidden');
+        } else if (channel === 'VIDEO_LINK') {
+          if (videoLinkBtn) videoLinkBtn.className = activeClass;
+          if (videoLinkPanel) videoLinkPanel.classList.remove('hidden');
+        }
+      }
+
+      function triggerFileInput() {
+        const fileUploader = document.getElementById('file-uploader');
+        if (fileUploader) {
+          fileUploader.click();
+        }
+      }
+
+      function compressAndSetImage(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            // Strictly compress to 800px max width/height with 0.7 quality
+            let max_size = 800;
+            let quality = 0.7;
+
+            if (width > height) {
+              if (width > max_size) {
+                height *= max_size / width;
+                width = max_size;
+              }
+            } else {
+              if (height > max_size) {
+                width *= max_size / height;
+                height = max_size;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // compress with preset quality
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            
+            // update Base64 state
+            compressedBase64 = dataUrl;
+            uploadedImageSrc = dataUrl;
+
+            // Compute dynamic base64 sizes to update label badge
+            const approxBytes = Math.round(dataUrl.length * 0.75);
+            const kbSize = (approxBytes / 1024).toFixed(1);
+            const originalKb = (file.size / 1024).toFixed(1);
+            
+            const badge = document.getElementById('img-optimize-badge');
+            if (badge) {
+              badge.textContent = `${kbSize} KB (Compressed from ${originalKb} KB)`;
+              badge.className = "text-[8px] font-mono px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-150";
+            }
+
+            // Update UI preview
+            document.getElementById('upload-placeholder').classList.add('hidden');
+            const previewLayer = document.getElementById('upload-preview-layer');
+            previewLayer.classList.remove('hidden');
+            document.getElementById('upload-pimg').src = dataUrl;
+
+            clearValidationError('media-input');
+            notifySystem(`Look compressed: ${kbSize} KB (${Math.round((1 - approxBytes/file.size)*100)}% saved)`);
+          };
+          img.onerror = function() {
+            showValidationError('media-input', 'Invalid image file.');
+          };
+          img.src = e.target.result;
+        };
+        reader.onerror = function() {
+          showValidationError('media-input', 'File reading failed.');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Video Source selection tabs
+      function switchVideoSourceType(sourceType) {
+        videoSourceType = sourceType;
+        
+        const linkBtn = document.getElementById('video-source-link-btn');
+        const fileBtn = document.getElementById('video-source-file-btn');
+        const linkPanel = document.getElementById('video-link-input-panel');
+        const filePanel = document.getElementById('video-file-input-panel');
+
+        clearValidationError('media-input');
+
+        if (sourceType === 'link') {
+          linkBtn.className = "py-1.5 text-center rounded-md bg-white text-black shadow-sm transition-all cursor-pointer";
+          fileBtn.className = "py-1.5 text-center rounded-md text-zinc-400 hover:text-zinc-700 transition-all cursor-pointer";
+          linkPanel.classList.remove('hidden');
+          filePanel.classList.add('hidden');
+        } else {
+          fileBtn.className = "py-1.5 text-center rounded-md bg-white text-black shadow-sm transition-all cursor-pointer";
+          linkBtn.className = "py-1.5 text-center rounded-md text-zinc-400 hover:text-zinc-700 transition-all cursor-pointer";
+          filePanel.classList.remove('hidden');
+          linkPanel.classList.add('hidden');
+        }
+      }
+
+      // Direct Video Loop functions
+      function triggerVideoFileInput() {
+        if (!uploadedVideoSrc) {
+          document.getElementById('video-file-uploader').click();
+        }
+      }
+
+      function processVideoFileLoad(event) {
+        const file = event.target.files[0] || (event.dataTransfer && event.dataTransfer.files[0]);
+        if (!file) return;
+
+        // Size limit of 1.2MB for loop base64 optimization limits
+        const maxVideoSize = 1.2 * 1024 * 1024;
+        const oBytes = file.size;
+        const kbSize = (oBytes / 1024).toFixed(1);
+
+        const metricEl = document.getElementById('video-size-metric');
+        if (metricEl) {
+          metricEl.textContent = `${kbSize} KB`;
+        }
+
+        const warnBox = document.getElementById('video-size-warning-box');
+
+        if (oBytes > maxVideoSize) {
+          warnBox.classList.remove('hidden');
+          warnBox.className = "text-[9.5px] font-mono leading-relaxed mt-1 py-1.5 px-2.5 border rounded border-red-200 bg-red-50 text-red-650 animate-pulse";
+          warnBox.innerHTML = `⚠️ File size: <strong>${kbSize} KB</strong> too heavy! In order to provide instant auto-play & fit inside database records, loops must be under <strong>1,200 KB (1.2MB)</strong>.<br/><span class="opacity-95">* Pro-Tip: Please trim details count or use "Streaming Link" to upload immediately without local limits.</span>`;
+          
+          resetVideoFileSelection();
+          showValidationError('media-input', `Local video clip too large (${kbSize} KB). Trim video duration or use Streaming Link.`);
+          return;
+        } else {
+          warnBox.classList.remove('hidden');
+          warnBox.className = "text-[8.5px] font-mono leading-relaxed mt-1 py-1.5 px-2.5 border rounded border-green-200 bg-green-50/50 text-green-705";
+          warnBox.innerHTML = `✅ Perfect Size: <strong>${kbSize} KB</strong>. Extremely lightweight, optimized and plays instantly!`;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64 = e.target.result;
+          uploadedVideoSrc = base64;
+
+          // Update preview players in real-time
+          document.getElementById('video-upload-placeholder').classList.add('hidden');
+          const previewLayer = document.getElementById('video-upload-preview-layer');
+          previewLayer.classList.remove('hidden');
+          const videoPlayer = document.getElementById('video-preview-player');
+          videoPlayer.src = base64;
+          videoPlayer.play().catch(ex => console.log("Direct video autoplay: ", ex));
+
+          clearValidationError('media-input');
+        };
+        reader.onerror = function() {
+          showValidationError('media-input', 'Failed to read video file.');
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function resetVideoFileSelection(e) {
+        if (e) e.stopPropagation();
+        uploadedVideoSrc = '';
+        document.getElementById('video-file-uploader').value = '';
+        document.getElementById('video-upload-preview-layer').classList.add('hidden');
+        document.getElementById('video-upload-placeholder').classList.remove('hidden');
+        
+        const metricEl = document.getElementById('video-size-metric');
+        if (metricEl) metricEl.textContent = 'No file';
+        
+        const warnBox = document.getElementById('video-size-warning-box');
+        if (warnBox) warnBox.classList.add('hidden');
+      }
+
+      function processFileLoad(event) {
+        const file = event.target.files[0] || (event.dataTransfer && event.dataTransfer.files[0]);
+        if (file) {
+          compressAndSetImage(file);
+        }
+      }
+
+      function resetFileSelection(e) {
+        if(e) e.stopPropagation();
+        uploadedImageSrc = '';
+        compressedBase64 = '';
+        document.getElementById('file-uploader').value = '';
+        
+        document.getElementById('upload-preview-layer').classList.add('hidden');
+        document.getElementById('upload-placeholder').classList.remove('hidden');
+      }
+
+      function initDragAndDrop() {
+        // Image dropzone listeners
+        const dropzone = document.getElementById('dropzone');
+        if (dropzone) {
+          ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+              e.preventDefault();
+              dropzone.classList.add('border-black', 'bg-zinc-100/55');
+            }, false);
+          });
+
+          ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+              e.preventDefault();
+              dropzone.classList.remove('border-black', 'bg-zinc-100/55');
+            }, false);
+          });
+
+          dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files[0]) {
+              const input = document.getElementById('file-uploader');
+              input.files = files;
+              const event = { target: { files: files } };
+              processFileLoad(event);
+            }
+          });
+        }
+
+        // Dedicated Video loop dropzone listeners
+        const videoDropzone = document.getElementById('video-dropzone');
+        if (videoDropzone) {
+          ['dragenter', 'dragover'].forEach(eventName => {
+            videoDropzone.addEventListener(eventName, (e) => {
+              e.preventDefault();
+              videoDropzone.classList.add('border-black', 'bg-zinc-100/55');
+            }, false);
+          });
+
+          ['dragleave', 'drop'].forEach(eventName => {
+            videoDropzone.addEventListener(eventName, (e) => {
+              e.preventDefault();
+              videoDropzone.classList.remove('border-black', 'bg-zinc-100/55');
+            }, false);
+          });
+
+          videoDropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files[0]) {
+              const input = document.getElementById('video-file-uploader');
+              input.files = files;
+              const event = { target: { files: files } };
+              processVideoFileLoad(event);
+            }
+          });
+        }
+      }
+
+      function resetFormFields() {
+        document.getElementById('portfolio-add-form').reset();
+        resetFileSelection();
+        compressedBase64 = '';
+        switchMediaChannel('UPLOAD_IMAGE');
+        clearValidationError('media-input');
+        clearValidationError('location');
+      }
+
+      function showValidationError(elementId, message) {
+        const errorEl = document.getElementById(elementId + '-error');
+        if (errorEl) {
+          errorEl.textContent = message;
+          errorEl.classList.remove('hidden');
+        }
+        
+        if (elementId === 'media-input') {
+          const dropzone = document.getElementById('dropzone');
+          const imageLinkInput = document.getElementById('item-image-link-url');
+          const videoLinkInput = document.getElementById('item-video-link-url');
+          if (selectedMediaChannel === 'UPLOAD_IMAGE') {
+            if (dropzone) dropzone.classList.add('border-red-500');
+          } else if (selectedMediaChannel === 'IMAGE_LINK') {
+            if (imageLinkInput) imageLinkInput.classList.add('border-red-500');
+          } else if (selectedMediaChannel === 'VIDEO_LINK') {
+            if (videoLinkInput) videoLinkInput.classList.add('border-red-500');
+          }
+        } else {
+          const inputEl = document.getElementById('item-' + elementId);
+          if (inputEl) {
+            inputEl.classList.add('border-red-500');
+          }
+        }
+      }
+
+      function clearValidationError(elementId) {
+        const errorEl = document.getElementById(elementId + '-error');
+        if (errorEl) {
+          errorEl.classList.add('hidden');
+          errorEl.textContent = '';
+        }
+
+        const dropzone = document.getElementById('dropzone');
+        const imageLinkInput = document.getElementById('item-image-link-url');
+        const videoLinkInput = document.getElementById('item-video-link-url');
+        if (dropzone) {
+          dropzone.classList.remove('border-red-500');
+        }
+        if (imageLinkInput) {
+          imageLinkInput.classList.remove('border-red-500');
+        }
+        if (videoLinkInput) {
+          videoLinkInput.classList.remove('border-red-500');
+        }
+
+        const inputEl = document.getElementById('item-' + elementId);
+        if (inputEl) {
+          inputEl.classList.remove('border-red-500');
+        }
+      }
+
+      // Process new clothing addition
+      function handleAddItemSubmit(event) {
+        event.preventDefault();
+
+        let hasErrors = false;
+        clearValidationError('media-input');
+        clearValidationError('location');
+
+        let finalImage = '';
+        let mediaUrlVal = '';
+
+        function isValidHttpUrl(string) {
+          try {
+            const url = new URL(string);
+            return url.protocol === "http:" || url.protocol === "https:";
+          } catch (_) {
+            return false;
+          }
+        }
+
+        if (selectedMediaChannel === 'UPLOAD_IMAGE') {
+          if (!compressedBase64) {
+            showValidationError('media-input', 'Please upload or drop an image file first.');
+            hasErrors = true;
+          } else {
+            finalImage = compressedBase64;
+            mediaUrlVal = compressedBase64;
+          }
+        } else if (selectedMediaChannel === 'IMAGE_LINK') {
+          const imgUrl = document.getElementById('item-image-link-url').value.trim();
+          if (!imgUrl) {
+            showValidationError('media-input', 'Please paste an image link URL.');
+            hasErrors = true;
+          } else if (!isValidHttpUrl(imgUrl)) {
+            showValidationError('media-input', 'Image URL must be a valid link starting with http:// or https://');
+            hasErrors = true;
+          } else {
+            mediaUrlVal = imgUrl;
+            finalImage = imgUrl;
+          }
+        } else if (selectedMediaChannel === 'VIDEO_LINK') {
+          const videoUrl = document.getElementById('item-video-link-url').value.trim();
+          if (!videoUrl) {
+            showValidationError('media-input', 'Please paste a video link URL.');
+            hasErrors = true;
+          } else if (!isValidHttpUrl(videoUrl)) {
+            showValidationError('media-input', 'Video URL must be a valid link starting with http:// or https://');
+            hasErrors = true;
+          } else {
+            mediaUrlVal = videoUrl;
+            finalImage = 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop';
+          }
+        }
+
+        const locationInput = document.getElementById('item-location').value.trim();
+        if (!locationInput) {
+          showValidationError('location', 'Please supply a studio or capture location.');
+          hasErrors = true;
+        }
+
+        if (hasErrors) {
+          return;
+        }
+
+        // Enforce active authentication write checks
+        if (!auth || !auth.currentUser) {
+          notifySystem("Authentication required. Please sign in first.", true);
+          return;
+        }
+
+        const activeUser = auth.currentUser;
+        const currentEmail = (activeUser.email || "").toLowerCase();
+        
+        // Strict student check safety-valve
+        if (!currentEmail.endsWith('@bumail.net')) {
+          notifySystem("Access Denied: Only @bumail.net students may upload.", true);
+          return;
+        }
+
+        // Prep fields conforming exactly to Firestore collection requirement
+        const titleVal = document.getElementById('item-title').value.trim() || 'Untitled Garment';
+        const designerVal = document.getElementById('item-designer').value.trim() || 'Undercover Design';
+        const seasonVal = document.getElementById('item-season').value.trim() || '2026 Archival';
+        const materialsVal = document.getElementById('item-materials').value.trim() || 'Undisclosed textiles';
+        const descVal = document.getElementById('item-desc').value.trim() || 'No narrative specified.';
+
+        // Calculate explicit target mediaType based on active multi-channel user tab selection
+        let calculatedMediaType = 'upload_image';
+        if (selectedMediaChannel === 'UPLOAD_IMAGE') {
+          calculatedMediaType = 'upload_image';
+        } else if (selectedMediaChannel === 'IMAGE_LINK') {
+          calculatedMediaType = 'link_image';
+        } else if (selectedMediaChannel === 'VIDEO_LINK') {
+          calculatedMediaType = 'video';
+        }
+
+        const payload = {
+          mediaType: calculatedMediaType,
+          mediaUrl: mediaUrlVal,
+          location: locationInput,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          userEmail: activeUser.email,
+          userName: activeUser.displayName || 'BU Student',
+          title: titleVal,
+          designer: designerVal,
+          season: seasonVal,
+          materials: materialsVal,
+          desc: descVal
+        };
+
+        // Console log payload conforming to Definition of Done
+        console.log('PUBLISH TO VAULT Payload:', payload);
+
+        // If Firestore is loaded, upload synchronously
+        if (db) {
+          const publishBtn = document.querySelector('#portfolio-add-form button[type="submit"]');
+          const originalText = publishBtn ? publishBtn.textContent : "PUBLISH TO VAULT";
+          if (publishBtn) {
+            publishBtn.textContent = "PUBLISHING TO VAULT...";
+            publishBtn.disabled = true;
+          }
+
+          db.collection('fashion_posts').add(payload)
+            .then(() => {
+              // Close the modal and reset form fields upon successful save
+              toggleAddDrawer(false);
+              resetFormFields();
+              notifySystem(`Published to Vault: "${titleVal}"`);
+            })
+            .catch((error) => {
+              handleFirestoreError(error, 'create', 'fashion_posts');
+            })
+            .finally(() => {
+              if (publishBtn) {
+                publishBtn.textContent = originalText;
+                publishBtn.disabled = false;
+              }
+            });
+        } else {
+          // Fluid standalone fallback for manual sandboxing checks
+          const localLook = {
+            id: Date.now(),
+            title: titleVal,
+            designer: designerVal,
+            season: seasonVal,
+            materials: materialsVal,
+            location: locationInput,
+            mediaType: calculatedMediaType,
+            mediaUrl: mediaUrlVal,
+            videoUrl: calculatedMediaType === 'video' ? mediaUrlVal : '',
+            image: finalImage,
+            desc: descVal
+          };
+          
+          posts.unshift(localLook);
+          toggleAddDrawer(false);
+          resetFormFields();
+          renderArchives();
+          notifySystem(`Saved to offline sandbox: "${titleVal}"`);
+        }
+      }
+
+      // Micro Feedback Toast messaging
+      function notifySystem(text, isError = false) {
+        const toast = document.createElement('div');
+        if (isError) {
+          toast.className = "absolute top-28 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[10px] uppercase tracking-wider px-5 py-3 rounded-lg shadow-xl z-50 pointer-events-none animate-fade-in font-sans font-semibold text-center max-w-[85%] border border-red-550";
+        } else {
+          toast.className = "absolute top-28 left-1/2 transform -translate-x-1/2 bg-black text-white text-[10px] uppercase tracking-widest px-4 py-2.5 rounded-full shadow-lg z-50 pointer-events-none animate-fade-in font-sans font-medium text-center max-w-[80%]";
+        }
+        toast.textContent = text;
+        document.getElementById('app-container').appendChild(toast);
+        
+        setTimeout(() => {
+          toast.style.transition = "opacity 0.5s ease-out";
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 500);
+        }, 2800);
+      }
+    </script>
+  </body>
+</html>
